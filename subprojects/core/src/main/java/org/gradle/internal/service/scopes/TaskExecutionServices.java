@@ -17,6 +17,7 @@ package org.gradle.internal.service.scopes;
 
 import org.gradle.StartParameter;
 import org.gradle.api.execution.TaskActionListener;
+import org.gradle.api.execution.TaskOutputCacheListener;
 import org.gradle.api.execution.internal.TaskInputsListener;
 import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.internal.cache.StringInterner;
@@ -94,7 +95,7 @@ public class TaskExecutionServices {
                                     startParameter,
                                     gradle.getTaskCaching(),
                                     packer,
-                                    new PostExecutionAnalysisTaskExecuter(
+                                    listenerManager, new PostExecutionAnalysisTaskExecuter(
                                         new ExecuteActionsTaskExecuter(
                                             listenerManager.getBroadcaster(TaskActionListener.class)
                                         )
@@ -108,9 +109,9 @@ public class TaskExecutionServices {
         );
     }
 
-    private static TaskExecuter createSkipCachedExecuterIfNecessary(StartParameter startParameter, TaskCachingInternal taskCaching, TaskOutputPacker packer, TaskExecuter delegate) {
+    private static TaskExecuter createSkipCachedExecuterIfNecessary(StartParameter startParameter, TaskCachingInternal taskCaching, TaskOutputPacker packer, ListenerManager listenerManager, TaskExecuter delegate) {
         if (startParameter.isTaskOutputCacheEnabled()) {
-            return new SkipCachedTaskExecuter(taskCaching, packer, startParameter, delegate);
+            return new SkipCachedTaskExecuter(taskCaching, packer, startParameter, listenerManager.getBroadcaster(TaskOutputCacheListener.class), delegate);
         } else {
             return delegate;
         }
